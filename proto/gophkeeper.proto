@@ -1,0 +1,126 @@
+edition = "2023";
+
+package gophkeeper;
+
+option go_package = "gophkeeper/proto";
+
+import "google/protobuf/timestamp.proto";
+
+service GophKeeperService {
+  rpc Register (RegisterRequest) returns (RegisterResponse);
+  rpc Login (LoginRequest) returns (LoginResponse);
+
+  rpc CreateItem (CreateItemRequest) returns (CreateItemResponse);
+  rpc GetItem (GetItemRequest) returns (GetItemResponse);
+  rpc ListItems (ListItemsRequest) returns (ListItemsResponse);
+  rpc UpdateItem (UpdateItemRequest) returns (UpdateItemResponse);
+  rpc DeleteItem (DeleteItemRequest) returns (DeleteItemResponse);
+  rpc SyncItems (SyncItemsRequest) returns (SyncItemsResponse);
+}
+
+message RegisterRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message RegisterResponse {
+  string user_id = 1;
+}
+
+message LoginRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+}
+
+enum ItemType {
+  ITEM_TYPE_UNSPECIFIED = 0;
+  ITEM_TYPE_LOGIN_PASSWORD = 1;
+  ITEM_TYPE_TEXT = 2;
+  ITEM_TYPE_BINARY = 3;
+  ITEM_TYPE_BANK_CARD = 4;
+}
+
+message VaultItem {
+  string id = 1;
+  ItemType type = 2;
+  string title = 3;
+  string meta = 4;
+  bytes payload_encrypted = 5;
+  bytes payload_nonce = 6;
+  string payload_hash = 7;
+  int64 version = 8;
+  google.protobuf.Timestamp client_updated_at = 9;
+  google.protobuf.Timestamp created_at = 10;
+  google.protobuf.Timestamp updated_at = 11;
+  google.protobuf.Timestamp deleted_at = 12;
+}
+
+message CreateItemRequest {
+  ItemType type = 1;
+  string title = 2;
+  string meta = 3;
+  bytes payload_encrypted = 4;
+  bytes payload_nonce = 5;
+  string payload_hash = 6;
+  google.protobuf.Timestamp client_updated_at = 7;
+}
+
+message CreateItemResponse {
+  VaultItem item = 1;
+}
+
+message GetItemRequest {
+  string id = 1;
+}
+
+message GetItemResponse {
+  VaultItem item = 1;
+}
+
+message ListItemsRequest {
+  bool include_deleted = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+message ListItemsResponse {
+  repeated VaultItem items = 1;
+}
+
+message UpdateItemRequest {
+  string id = 1;
+  string title = 2;
+  string meta = 3;
+  bytes payload_encrypted = 4;
+  bytes payload_nonce = 5;
+  string payload_hash = 6;
+  google.protobuf.Timestamp client_updated_at = 7;
+  int64 version = 8;
+}
+
+message UpdateItemResponse {
+  VaultItem item = 1;
+}
+
+message DeleteItemRequest {
+  string id = 1;
+}
+
+message DeleteItemResponse {
+  string id = 1;
+  google.protobuf.Timestamp deleted_at = 2;
+}
+
+message SyncItemsRequest {
+  google.protobuf.Timestamp last_sync_at = 1;
+  bool include_deleted = 2;
+}
+
+message SyncItemsResponse {
+  repeated VaultItem items = 1;
+  google.protobuf.Timestamp server_time = 2;
+}
