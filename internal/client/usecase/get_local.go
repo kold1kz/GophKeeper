@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -9,16 +10,24 @@ import (
 	"gophkeeper/internal/client/payload"
 )
 
+// GetLocalItemUseCase описывает сценарий получения и вывода
+// локально сохраненной записи.
 type GetLocalItemUseCase struct {
 	store *local.Store
 }
 
+// NewGetLocalItemUseCase создает новый use case для получения
+// локальной записи.
 func NewGetLocalItemUseCase(store *local.Store) *GetLocalItemUseCase {
 	return &GetLocalItemUseCase{
 		store: store,
 	}
 }
 
+// Execute находит запись в локальном хранилище, расшифровывает ее
+// и выводит данные в консоль.
+//
+// Формат вывода зависит от типа записи.
 func (u *GetLocalItemUseCase) Execute(id, masterPassword string) error {
 	if id == "" {
 		return fmt.Errorf("item id is required")

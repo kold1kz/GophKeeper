@@ -1,3 +1,13 @@
+// Команда gophkeeper-cli представляет собой CLI-клиент для работы с
+// менеджером паролей GophKeeper.
+//
+// Клиент позволяет:
+//   - регистрировать пользователя;
+//   - выполнять вход;
+//   - синхронизировать данные с сервером;
+//   - создавать, просматривать, обновлять и удалять записи;
+//   - работать с локальным зашифрованным хранилищем;
+//   - отображать информацию о сборке.
 package main
 
 import (
@@ -12,11 +22,17 @@ import (
 )
 
 var (
+	// buildVersion содержит версию сборки клиента.
 	buildVersion string
-	buildDate    string
-	buildCommit  string
+	// buildDate содержит дату сборки клиента.
+	buildDate string
+	// buildCommit содержит идентификатор коммита клиента.
+	buildCommit string
 )
 
+// na возвращает строку "N/A", если значение пустое.
+//
+// Используется для вывода метаданных сборки.
 func na(s string) string {
 	if s == "" {
 		return "N/A"
@@ -24,6 +40,10 @@ func na(s string) string {
 	return s
 }
 
+// main является точкой входа CLI-приложения.
+//
+// Выполняет запуск клиентской логики и завершает процесс с кодом 1
+// при возникновении ошибки.
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
@@ -31,6 +51,11 @@ func main() {
 	}
 }
 
+// run загружает конфигурацию клиента, создает зависимости и обрабатывает
+// переданную CLI-команду.
+//
+// Возвращает ошибку, если команда выполнена некорректно или произошел сбой
+// во время выполнения.
 func run() error {
 	cfg, err := clientconfig.Load()
 	if err != nil {
@@ -261,6 +286,7 @@ func run() error {
 	}
 }
 
+// printUsage выводит справку по поддерживаемым CLI-командам.
 func printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  gophkeeper-cli register <login> <password>")

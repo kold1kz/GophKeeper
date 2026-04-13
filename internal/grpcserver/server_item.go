@@ -1,3 +1,11 @@
+// Package grpcserver содержит реализацию gRPC-сервера,
+// обеспечивающего доступ к хранилищу данных пользователей.
+//
+// Пакет реализует:
+// - обработку gRPC-запросов
+// - авторизацию пользователей
+// - преобразование моделей в protobuf
+// - взаимодействие с бизнес-логикой (service layer)
 package grpcserver
 
 import (
@@ -13,6 +21,16 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// CreateItem создает новый элемент в хранилище пользователя.
+//
+// Требует наличия userID в контексте.
+// Выполняет преобразование запроса в модель,
+// вызывает сервисный слой и возвращает результат.
+//
+// Возможные ошибки:
+// - Unauthenticated — пользователь не авторизован
+// - InvalidArgument — некорректный тип или данные
+// - Internal — внутренняя ошибка сервера
 func (s *Server) CreateItem(ctx context.Context, req *pb.CreateItemRequest) (*pb.CreateItemResponse, error) {
 	userID, ok := userIDInt64FromContext(ctx)
 	if !ok || userID == 0 {
@@ -39,6 +57,17 @@ func (s *Server) CreateItem(ctx context.Context, req *pb.CreateItemRequest) (*pb
 	}.Build(), nil
 }
 
+// GetItem возвращает элемент по его идентификатору.
+//
+// Требует авторизации пользователя.
+// Делегирует получение данных сервисному слою.
+//
+// Возможные ошибки:
+// - Unauthenticated — пользователь не авторизован
+// - InvalidArgument — некорректный идентификатор
+// - NotFound — элемент не найден
+// - FailedPrecondition — элемент удален
+// - Internal — внутренняя ошибка
 func (s *Server) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.GetItemResponse, error) {
 	userID, ok := userIDInt64FromContext(ctx)
 	if !ok || userID == 0 {
@@ -64,6 +93,14 @@ func (s *Server) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.GetIt
 	}.Build(), nil
 }
 
+// ListItems возвращает список элементов пользователя.
+//
+// Поддерживает пагинацию и фильтрацию удаленных элементов.
+//
+// Возможные ошибки:
+// - Unauthenticated — пользователь не авторизован
+// - InvalidArgument — некорректные параметры
+// - Internal — ошибка получения данных
 func (s *Server) ListItems(ctx context.Context, req *pb.ListItemsRequest) (*pb.ListItemsResponse, error) {
 	userID, ok := userIDInt64FromContext(ctx)
 	if !ok || userID == 0 {
@@ -91,6 +128,17 @@ func (s *Server) ListItems(ctx context.Context, req *pb.ListItemsRequest) (*pb.L
 	}.Build(), nil
 }
 
+// UpdateItem обновляет существующий элемент.
+//
+// Использует версионирование для предотвращения конфликтов.
+//
+// Возможные ошибки:
+// - Unauthenticated — пользователь не авторизован
+// - InvalidArgument — некорректные данные
+// - NotFound — элемент не найден
+// - FailedPrecondition — элемент удален
+// - Aborted — конфликт версий
+// - Internal — ошибка обновления
 func (s *Server) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) (*pb.UpdateItemResponse, error) {
 	userID, ok := userIDInt64FromContext(ctx)
 	if !ok || userID == 0 {
@@ -120,6 +168,15 @@ func (s *Server) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) (*pb
 	}.Build(), nil
 }
 
+// DeleteItem выполняет мягкое удаление элемента.
+//
+// Возвращает время удаления.
+//
+// Возможные ошибки:
+// - Unauthenticated — пользователь не авторизован
+// - InvalidArgument — некорректный идентификатор
+// - NotFound — элемент не найден
+// - Internal — ошибка удаления
 func (s *Server) DeleteItem(ctx context.Context, req *pb.DeleteItemRequest) (*pb.DeleteItemResponse, error) {
 	userID, ok := userIDInt64FromContext(ctx)
 	if !ok || userID == 0 {
@@ -145,6 +202,14 @@ func (s *Server) DeleteItem(ctx context.Context, req *pb.DeleteItemRequest) (*pb
 	}.Build(), nil
 }
 
+// SyncItems синхронизирует данные между клиентом и сервером.
+//
+// Возвращает список изменений с момента последней синхронизации.
+//
+// Возможные ошибки:
+// - Unauthenticated — пользователь не авторизован
+// - InvalidArgument — некорректные параметры
+// - Internal — ошибка синхронизации
 func (s *Server) SyncItems(ctx context.Context, req *pb.SyncItemsRequest) (*pb.SyncItemsResponse, error) {
 	userID, ok := userIDInt64FromContext(ctx)
 	if !ok || userID == 0 {

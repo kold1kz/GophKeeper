@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -10,11 +11,14 @@ import (
 	pb "gophkeeper/proto"
 )
 
+// UpdateTextItemUseCase описывает сценарий обновления текстовой записи.
 type UpdateTextItemUseCase struct {
 	store *local.Store
 	grpc  *grpcclient.Client
 }
 
+// NewUpdateTextItemUseCase создаёт новый use case для обновления
+// текстовой записи.
 func NewUpdateTextItemUseCase(store *local.Store, grpc *grpcclient.Client) *UpdateTextItemUseCase {
 	return &UpdateTextItemUseCase{
 		store: store,
@@ -22,6 +26,18 @@ func NewUpdateTextItemUseCase(store *local.Store, grpc *grpcclient.Client) *Upda
 	}
 }
 
+// Execute обновляет текстовую запись на сервере.
+//
+// Функция:
+//   - проверяет входные данные;
+//   - загружает локальное состояние;
+//   - ищет запись в локальном кеше;
+//   - шифрует новый текст;
+//   - отправляет обновление на сервер.
+//
+// Для обновления требуется актуальная локальная версия записи,
+// поэтому при отсутствии записи в локальном состоянии
+// пользователю предлагается сначала выполнить синхронизацию.
 func (u *UpdateTextItemUseCase) Execute(ctx context.Context, id, title, text, meta, masterPassword string) error {
 	if id == "" {
 		return fmt.Errorf("item id is required")

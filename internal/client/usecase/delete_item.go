@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -9,11 +10,13 @@ import (
 	pb "gophkeeper/proto"
 )
 
+// DeleteItemUseCase описывает сценарий удаления записи.
 type DeleteItemUseCase struct {
 	store *local.Store
 	grpc  *grpcclient.Client
 }
 
+// NewDeleteItemUseCase создает новый use case для удаления записи.
 func NewDeleteItemUseCase(store *local.Store, grpc *grpcclient.Client) *DeleteItemUseCase {
 	return &DeleteItemUseCase{
 		store: store,
@@ -21,6 +24,10 @@ func NewDeleteItemUseCase(store *local.Store, grpc *grpcclient.Client) *DeleteIt
 	}
 }
 
+// Execute удаляет запись по идентификатору на сервере.
+//
+// Функция требует, чтобы пользователь был аутентифицирован.
+// В случае успеха идентификатор удаленной записи выводится в консоль.
 func (u *DeleteItemUseCase) Execute(ctx context.Context, id string) error {
 	if id == "" {
 		return fmt.Errorf("item id is required")

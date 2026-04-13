@@ -1,3 +1,11 @@
+// Package usecase содержит сценарии работы CLI-клиента GophKeeper.
+//
+// Пакет реализует прикладную бизнес-логику клиента:
+//   - создание записей;
+//   - получение и вывод данных;
+//   - удаление записей;
+//   - синхронизацию с сервером;
+//   - регистрацию и аутентификацию пользователя.
 package usecase
 
 import (
@@ -12,11 +20,15 @@ import (
 	pb "gophkeeper/proto"
 )
 
+// CreateBankCardItemUseCase описывает сценарий создания записи
+// с банковской картой.
 type CreateBankCardItemUseCase struct {
 	store *local.Store
 	grpc  *grpcclient.Client
 }
 
+// NewCreateBankCardItemUseCase создает новый use case для создания
+// записи с банковской картой.
 func NewCreateBankCardItemUseCase(store *local.Store, grpc *grpcclient.Client) *CreateBankCardItemUseCase {
 	return &CreateBankCardItemUseCase{
 		store: store,
@@ -24,6 +36,17 @@ func NewCreateBankCardItemUseCase(store *local.Store, grpc *grpcclient.Client) *
 	}
 }
 
+// Execute создает новую запись с данными банковской карты.
+//
+// Функция:
+//   - загружает локальное состояние;
+//   - проверяет аутентификацию;
+//   - валидирует входные данные;
+//   - сериализует полезную нагрузку;
+//   - шифрует ее мастер-паролем;
+//   - отправляет запись на сервер.
+//
+// Возвращает идентификатор созданной записи или ошибку.
 func (u *CreateBankCardItemUseCase) Execute(
 	ctx context.Context,
 	title, number, holder, expiry, cvv, meta, masterPassword string,

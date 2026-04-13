@@ -1,3 +1,4 @@
+// Package database содержит код для работы с базой данных PostgreSQL.
 package database
 
 import (
@@ -8,6 +9,12 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
+// AutoMigrate применяет миграции к базе данных.
+//
+// Функция использует файловый источник миграций "file://migrations"
+// и применяет все ещё не выполненные миграции к базе PostgreSQL.
+//
+// Если миграций для применения нет, ошибка ErrNoChange не считается ошибкой выполнения.
 func AutoMigrate(db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("database is nil")

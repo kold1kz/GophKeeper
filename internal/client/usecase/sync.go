@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -12,11 +13,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// SyncUseCase описывает сценарий синхронизации данных клиента с сервером.
 type SyncUseCase struct {
 	store *local.Store
 	grpc  *grpcclient.Client
 }
 
+// NewSyncUseCase создаёт новый use case для синхронизации данных.
 func NewSyncUseCase(store *local.Store, grpc *grpcclient.Client) *SyncUseCase {
 	return &SyncUseCase{
 		store: store,
@@ -24,6 +27,14 @@ func NewSyncUseCase(store *local.Store, grpc *grpcclient.Client) *SyncUseCase {
 	}
 }
 
+// Execute выполняет синхронизацию локального состояния клиента с сервером.
+//
+// Функция:
+//   - загружает локальное состояние;
+//   - отправляет серверу время последней синхронизации;
+//   - получает изменённые записи;
+//   - преобразует их в локальный формат;
+//   - обновляет локальное состояние и сохраняет его.
 func (u *SyncUseCase) Execute(ctx context.Context) error {
 	state, err := u.store.Load()
 	if err != nil {

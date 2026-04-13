@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -14,11 +15,15 @@ import (
 	pb "gophkeeper/proto"
 )
 
+// CreateBinaryItemUseCase описывает сценарий создания записи
+// с бинарным файлом.
 type CreateBinaryItemUseCase struct {
 	store *local.Store
 	grpc  *grpcclient.Client
 }
 
+// NewCreateBinaryItemUseCase создает новый use case для создания
+// записи с бинарным файлом.
 func NewCreateBinaryItemUseCase(store *local.Store, grpc *grpcclient.Client) *CreateBinaryItemUseCase {
 	return &CreateBinaryItemUseCase{
 		store: store,
@@ -26,6 +31,12 @@ func NewCreateBinaryItemUseCase(store *local.Store, grpc *grpcclient.Client) *Cr
 	}
 }
 
+// Execute создает новую запись с бинарным файлом.
+//
+// Функция читает файл с диска, сериализует его содержимое,
+// шифрует полезную нагрузку и отправляет запись на сервер.
+//
+// Возвращает идентификатор созданной записи или ошибку.
 func (u *CreateBinaryItemUseCase) Execute(
 	ctx context.Context,
 	title, filePath, meta, masterPassword string,

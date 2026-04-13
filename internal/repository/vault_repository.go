@@ -7,6 +7,9 @@ import (
 	"gophkeeper/internal/model"
 )
 
+// VaultRepository определяет контракт для работы с хранилищем пользователя.
+//
+// Позволяет создавать, получать, обновлять, удалять и синхронизировать данные.
 type VaultRepository interface {
 	CreateItem(ctx context.Context, item *model.VaultItem) error
 	GetItemByID(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error)

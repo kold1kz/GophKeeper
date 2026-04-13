@@ -1,3 +1,4 @@
+// Package grpcserver содержит реализацию gRPC-сервера GophKeeper.
 package grpcserver
 
 import (
@@ -14,6 +15,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// Server реализует gRPC-сервис GophKeeper.
+//
+// Сервер делегирует бизнес-логику сервисному слою:
+//   - регистрацию;
+//   - вход пользователя;
+//   - работу с приватными данными.
 type Server struct {
 	pb.UnimplementedGophKeeperServiceServer
 	loginService    service.LoginService
@@ -21,6 +28,7 @@ type Server struct {
 	vaultService    service.VaultService
 }
 
+// NewServer создаёт новый экземпляр gRPC-сервера GophKeeper.
 func NewServer(
 	registerSvc service.RegisterService,
 	loginSvc service.LoginService,
@@ -33,6 +41,10 @@ func NewServer(
 	}
 }
 
+// Register обрабатывает запрос регистрации нового пользователя.
+//
+// При успешной регистрации возвращает идентификатор созданного пользователя.
+// Ошибки сервисного слоя преобразуются в соответствующие gRPC-статусы.
 func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	if req.GetLogin() == "" || req.GetPassword() == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty register data")
@@ -55,6 +67,10 @@ func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.Reg
 	}.Build(), nil
 }
 
+// Login обрабатывает запрос аутентификации пользователя.
+//
+// При успешной проверке логина и пароля возвращает токен доступа.
+// Ошибки сервисного слоя преобразуются в соответствующие gRPC-статусы.
 func (s *Server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
 	if req.GetLogin() == "" || req.GetPassword() == "" {
 		return nil, status.Error(codes.InvalidArgument, "empty credentials")

@@ -1,3 +1,4 @@
+// Package grpcserver содержит реализацию gRPC-сервера GophKeeper.
 package grpcserver
 
 import (
@@ -10,6 +11,10 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// protoItemTypeToModel преобразует тип записи из protobuf-представления
+// в доменный тип model.ItemType.
+//
+// Возвращает ошибку, если тип не поддерживается.
 func protoItemTypeToModel(t pb.ItemType) (model.ItemType, error) {
 	switch t {
 	case pb.ItemType_ITEM_TYPE_LOGIN_PASSWORD:
@@ -25,6 +30,8 @@ func protoItemTypeToModel(t pb.ItemType) (model.ItemType, error) {
 	}
 }
 
+// modelItemTypeToProto преобразует доменный тип записи
+// в protobuf-представление.
 func modelItemTypeToProto(t model.ItemType) pb.ItemType {
 	switch t {
 	case model.ItemTypeLoginPassword:
@@ -40,6 +47,10 @@ func modelItemTypeToProto(t model.ItemType) pb.ItemType {
 	}
 }
 
+// createItemRequestToModel преобразует protobuf-запрос создания записи
+// в доменную модель VaultItem.
+//
+// В запись подставляется идентификатор текущего пользователя.
 func createItemRequestToModel(userID int64, req *pb.CreateItemRequest) (*model.VaultItem, error) {
 	itemType, err := protoItemTypeToModel(req.GetType())
 	if err != nil {
@@ -64,6 +75,10 @@ func createItemRequestToModel(userID int64, req *pb.CreateItemRequest) (*model.V
 	}, nil
 }
 
+// updateItemRequestToModel преобразует protobuf-запрос обновления записи
+// в доменную модель VaultItem.
+//
+// В запись подставляется идентификатор текущего пользователя.
 func updateItemRequestToModel(userID int64, req *pb.UpdateItemRequest) *model.VaultItem {
 	var clientUpdatedAt *time.Time
 	if ts := req.GetClientUpdatedAt(); ts != nil {
@@ -84,6 +99,8 @@ func updateItemRequestToModel(userID int64, req *pb.UpdateItemRequest) *model.Va
 	}
 }
 
+// modelItemToProto преобразует доменную запись VaultItem
+// в protobuf-представление VaultItem.
 func modelItemToProto(item *model.VaultItem) *pb.VaultItem {
 	if item == nil {
 		return nil
@@ -115,6 +132,8 @@ func modelItemToProto(item *model.VaultItem) *pb.VaultItem {
 	}.Build()
 }
 
+// modelItemsToProto преобразует срез доменных записей
+// в срез protobuf-объектов.
 func modelItemsToProto(items []*model.VaultItem) []*pb.VaultItem {
 	result := make([]*pb.VaultItem, 0, len(items))
 	for _, item := range items {

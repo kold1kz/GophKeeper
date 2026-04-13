@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -11,16 +12,25 @@ import (
 	"gophkeeper/internal/client/payload"
 )
 
+// GetBinaryItemUseCase описывает сценарий получения бинарной записи
+// из локального состояния и записи ее в файл.
 type GetBinaryItemUseCase struct {
 	store *local.Store
 }
 
+// NewGetBinaryItemUseCase создает новый use case для получения
+// бинарной записи.
 func NewGetBinaryItemUseCase(store *local.Store) *GetBinaryItemUseCase {
 	return &GetBinaryItemUseCase{
 		store: store,
 	}
 }
 
+// Execute находит бинарную запись в локальном хранилище, расшифровывает ее
+// и сохраняет файл в указанную директорию.
+//
+// Функция возвращает ошибку, если запись не найдена, удалена,
+// не удалось расшифровать полезную нагрузку или записать файл.
 func (u *GetBinaryItemUseCase) Execute(id, masterPassword, outputDir string) error {
 	if id == "" {
 		return fmt.Errorf("item id is required")

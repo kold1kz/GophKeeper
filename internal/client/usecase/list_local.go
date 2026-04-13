@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -6,16 +7,22 @@ import (
 	"gophkeeper/internal/client/local"
 )
 
+// ListLocalItemsUseCase описывает сценарий вывода локальных записей.
 type ListLocalItemsUseCase struct {
 	store *local.Store
 }
 
+// NewListLocalItemsUseCase создаёт новый use case для вывода локальных записей.
 func NewListLocalItemsUseCase(store *local.Store) *ListLocalItemsUseCase {
 	return &ListLocalItemsUseCase{
 		store: store,
 	}
 }
 
+// Execute загружает локальное состояние и выводит в консоль все активные записи.
+//
+// Удалённые записи не выводятся. Если активных записей нет,
+// функция печатает сообщение "no items".
 func (u *ListLocalItemsUseCase) Execute() error {
 	state, err := u.store.Load()
 	if err != nil {

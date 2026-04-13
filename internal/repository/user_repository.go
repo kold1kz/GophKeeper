@@ -1,3 +1,10 @@
+// Package repository содержит реализации доступа к данным.
+//
+// Пакет реализует взаимодействие с базой данных PostgreSQL
+// для работы с пользователями и элементами хранилища.
+//
+// Все операции с данными инкапсулированы в репозиториях,
+// которые используются сервисным слоем.
 package repository
 
 import (
@@ -10,6 +17,8 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
+// ErrUserAlreadyExists возвращается при попытке зарегистрировать
+// пользователя с уже существующим логином.
 var ErrUserAlreadyExists = errors.New("user already exists")
 
 type User struct {
@@ -18,19 +27,32 @@ type User struct {
 	Password string
 }
 
+// UserRepository определяет контракт для работы с пользователями.
+//
+// Используется сервисным слоем для абстракции от конкретной реализации БД.
 type UserRepository interface {
 	FindByUsername(ctx context.Context, login string) (*User, error)
 	Create(ctx context.Context, login, passwordHash string) (int, error)
 }
 
+// PostgresUserRepository реализует работу с пользователями в PostgreSQL.
+//
+// Предоставляет методы для поиска пользователя и создания нового.
 type PostgresUserRepository struct {
 	db *sql.DB
 }
 
+// NewPostgresUserRepository создает новый репозиторий пользователей.
 func NewPostgresUserRepository(db *sql.DB) *PostgresUserRepository {
 	return &PostgresUserRepository{db: db}
 }
 
+// FindByUsername возвращает пользователя по логину.
+//
+// Возвращает:
+// - пользователя при успехе
+// - ErrUserNotFound, если пользователь не найден
+// - ошибку при сбое запроса к базе данных
 func (r *PostgresUserRepository) FindByUsername(ctx context.Context, login string) (*User, error) {
 	const query = `
 		SELECT id, login, password_hash
@@ -54,6 +76,12 @@ func (r *PostgresUserRepository) FindByUsername(ctx context.Context, login strin
 	return &user, nil
 }
 
+// Create создает нового пользователя в базе данных.
+//
+// Возвращает:
+// - созданного пользователя при успехе
+// - ErrUserAlreadyExists, если пользователь уже существует
+// - ошибку при сбое записи в базу данных
 func (r *PostgresUserRepository) Create(ctx context.Context, login, passwordHash string) (int, error) {
 	const query = `
 		INSERT INTO users (login, password_hash)

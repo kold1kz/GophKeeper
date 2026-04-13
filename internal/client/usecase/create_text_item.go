@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -10,11 +11,14 @@ import (
 	pb "gophkeeper/proto"
 )
 
+// CreateTextItemUseCase описывает сценарий создания текстовой записи.
 type CreateTextItemUseCase struct {
 	store *local.Store
 	grpc  *grpcclient.Client
 }
 
+// NewCreateTextItemUseCase создает новый use case для создания
+// текстовой записи.
 func NewCreateTextItemUseCase(store *local.Store, grpc *grpcclient.Client) *CreateTextItemUseCase {
 	return &CreateTextItemUseCase{
 		store: store,
@@ -22,6 +26,11 @@ func NewCreateTextItemUseCase(store *local.Store, grpc *grpcclient.Client) *Crea
 	}
 }
 
+// Execute создает новую текстовую запись.
+//
+// Текст шифруется мастер-паролем и отправляется на сервер.
+//
+// Возвращает идентификатор созданной записи или ошибку.
 func (u *CreateTextItemUseCase) Execute(ctx context.Context, title, text, meta, masterPassword string) (string, error) {
 	state, err := u.store.Load()
 	if err != nil {

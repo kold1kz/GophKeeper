@@ -1,3 +1,8 @@
+// Package repository содержит реализации репозиториев для работы
+// с постоянным хранилищем данных приложения GophKeeper.
+//
+// Пакет отвечает за доступ к данным пользователей и приватных записей
+// в PostgreSQL.
 package repository
 
 import (
@@ -10,14 +15,22 @@ import (
 	"gophkeeper/internal/model"
 )
 
+// PostgresVaultRepository реализует хранилище приватных записей
+// пользователя на базе PostgreSQL.
 type PostgresVaultRepository struct {
 	db *sql.DB
 }
 
+// NewPostgresVaultRepository создаёт новый репозиторий для работы
+// с приватными данными пользователя.
 func NewPostgresVaultRepository(db *sql.DB) *PostgresVaultRepository {
 	return &PostgresVaultRepository{db: db}
 }
 
+// CreateItem сохраняет новую запись в базе данных.
+//
+// При успешном выполнении возвращает созданную запись со всеми заполненными
+// служебными полями, включая идентификатор, версию и временные метки.
 func (r *PostgresVaultRepository) CreateItem(ctx context.Context, item *model.VaultItem) error {
 	const query = `
 		INSERT INTO vault_items (
@@ -62,6 +75,11 @@ func (r *PostgresVaultRepository) CreateItem(ctx context.Context, item *model.Va
 	return nil
 }
 
+// GetItemByID возвращает запись по её идентификатору и идентификатору владельца.
+//
+// Если запись не найдена, функция возвращает ErrItemNotFound.
+// Если запись была удалена, это определяется на уровне вызывающего кода
+// по полю DeletedAt.
 func (r *PostgresVaultRepository) GetItemByID(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error) {
 	const query = `
 		SELECT
@@ -111,6 +129,10 @@ func (r *PostgresVaultRepository) GetItemByID(ctx context.Context, userID int64,
 	return &item, nil
 }
 
+// ListItems возвращает список записей пользователя с учётом параметров выборки.
+//
+// Параметр includeDeleted определяет, нужно ли включать удалённые записи.
+// Параметры limit и offset используются для пагинации результата.
 func (r *PostgresVaultRepository) ListItems(ctx context.Context, userID int64, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
 	query := `
 		SELECT
@@ -183,6 +205,10 @@ func (r *PostgresVaultRepository) ListItems(ctx context.Context, userID int64, i
 	return items, nil
 }
 
+// UpdateItem обновляет существующую запись.
+//
+// Метод использует версионность записи для защиты от конфликтов обновления.
+// Если версия не совпадает, должна возвращаться ошибка конфликта версий.
 func (r *PostgresVaultRepository) UpdateItem(ctx context.Context, item *model.VaultItem) (bool, error) {
 	const query = `
 		UPDATE vault_items
@@ -224,6 +250,10 @@ func (r *PostgresVaultRepository) UpdateItem(ctx context.Context, item *model.Va
 	return affected > 0, nil
 }
 
+// SoftDeleteItem выполняет мягкое удаление записи.
+//
+// Вместо физического удаления запись помечается как удалённая через поле DeletedAt.
+// Возвращает время удаления.
 func (r *PostgresVaultRepository) SoftDeleteItem(ctx context.Context, userID int64, itemID string, deletedAt time.Time) (bool, error) {
 	const query = `
 		UPDATE vault_items
@@ -247,6 +277,9 @@ func (r *PostgresVaultRepository) SoftDeleteItem(ctx context.Context, userID int
 	return affected > 0, nil
 }
 
+// SyncItems возвращает элементы, измененные после указанного времени.
+//
+// Используется для синхронизации данных между клиентами.
 func (r *PostgresVaultRepository) SyncItems(ctx context.Context, userID int64, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
 	query := `
 		SELECT

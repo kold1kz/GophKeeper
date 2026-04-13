@@ -1,3 +1,10 @@
+// Package config содержит конфигурацию серверного приложения GophKeeper.
+//
+// Пакет отвечает за:
+//   - чтение конфигурации из флагов командной строки;
+//   - применение переменных окружения;
+//   - базовую валидацию параметров;
+//   - инициализацию подключения к базе данных.
 package config
 
 import (
@@ -9,22 +16,39 @@ import (
 	"strconv"
 )
 
+// Config описывает конфигурацию серверного приложения.
 type Config struct {
+	// GRPCServerAddress содержит адрес запуска gRPC-сервера.
 	GRPCServerAddress string
-	BaseURL           string
-	DatabaseDSN       string
-	EnableHTTPS       bool
+	// BaseURL содержит базовый URL приложения.
+	BaseURL string
+	// DatabaseDSN содержит строку подключения к базе данных PostgreSQL.
+	DatabaseDSN string
+	// EnableHTTPS определяет, должен ли сервер запускаться с TLS.
+	EnableHTTPS bool
 
+	// DB содержит инициализированное подключение к базе данных.
 	DB *database.DB
 }
 
+// FileConfig описывает структуру конфигурации, которая может быть
+// загружена из внешнего файла.
 type FileConfig struct {
+	// GRPCServerAddress содержит адрес запуска gRPC-сервера.
 	GRPCServerAddress string `json:"grpc_server_address"`
-	BaseURL           string `json:"base_url"`
-	DatabaseDSN       string `json:"database_dsn"`
-	EnableHTTPS       *bool  `json:"enable_https"`
+	// BaseURL содержит базовый URL приложения.
+	BaseURL string `json:"base_url"`
+	// DatabaseDSN содержит строку подключения к базе данных.
+	DatabaseDSN string `json:"database_dsn"`
+	// EnableHTTPS определяет, должен ли сервер запускаться с TLS.
+	EnableHTTPS *bool `json:"enable_https"`
 }
 
+// Init инициализирует конфигурацию приложения.
+//
+// Значения по умолчанию читаются из флагов командной строки,
+// затем поверх них накладываются значения из переменных окружения.
+// После этого выполняется попытка инициализировать подключение к базе данных.
 func Init() *Config {
 	cfg := &Config{}
 
@@ -46,6 +70,10 @@ func Init() *Config {
 	return cfg
 }
 
+// applyEnv применяет к конфигурации значения из переменных окружения.
+//
+// Если соответствующая переменная окружения установлена,
+// её значение переопределяет текущее значение конфигурации.
 func applyEnv(cfg *Config) {
 	if v := os.Getenv("GRPC_SERVER_ADDRESS"); v != "" {
 		cfg.GRPCServerAddress = v
@@ -66,6 +94,9 @@ func applyEnv(cfg *Config) {
 	}
 }
 
+// Validate проверяет обязательные поля конфигурации.
+//
+// Возвращает ошибку, если обязательные параметры не заданы.
 func (c *Config) Validate() error {
 	if c.GRPCServerAddress == "" {
 		return fmt.Errorf("grpc server address cannot be empty")
@@ -76,6 +107,11 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+// initDB инициализирует подключение к базе данных,
+// если строка подключения задана.
+//
+// В случае ошибки подключения функция пишет сообщение в лог
+// и оставляет поле DB незаполненным.
 func (c *Config) initDB() {
 	if c.DatabaseDSN == "" {
 		return
@@ -91,6 +127,10 @@ func (c *Config) initDB() {
 	log.Printf("Connected to PostgreSQL")
 }
 
+// Close закрывает все ресурсы, связанные с конфигурацией.
+//
+// В текущей реализации закрывает подключение к базе данных,
+// если оно было инициализировано.
 func (c *Config) Close() error {
 	if c.DB != nil {
 		_ = c.DB.Close()

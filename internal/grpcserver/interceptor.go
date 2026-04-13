@@ -1,3 +1,4 @@
+// Package grpcserver содержит реализацию gRPC-сервера GophKeeper.
 package grpcserver
 
 import (
@@ -14,6 +15,17 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// AuthInterceptor выполняет аутентификацию пользователя по Bearer-токену.
+//
+// Интерсептор пропускает без проверки публичные методы:
+//   - Login;
+//   - Register.
+//
+// Для остальных методов интерсептор:
+//   - извлекает заголовок authorization из metadata;
+//   - проверяет формат Bearer-токена;
+//   - валидирует токен;
+//   - сохраняет userID в context.Context.
 func AuthInterceptor(
 	ctx context.Context,
 	req any,
@@ -52,6 +64,12 @@ func AuthInterceptor(
 	return handler(withUserID(ctx, userID), req)
 }
 
+// LoggingInterceptor создаёт unary-интерсептор для логирования gRPC-запросов.
+//
+// Интерсептор фиксирует:
+//   - имя метода;
+//   - длительность выполнения;
+//   - код и сообщение ошибки, если запрос завершился неуспешно.
 func LoggingInterceptor(logger *zap.SugaredLogger) grpc.UnaryServerInterceptor {
 	return func(
 		ctx context.Context,

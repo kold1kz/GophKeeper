@@ -1,3 +1,7 @@
+// Package config содержит конфигурацию CLI-клиента GophKeeper.
+//
+// Пакет отвечает за загрузку параметров подключения к серверу
+// и путей к локальному состоянию клиента.
 package config
 
 import (
@@ -6,13 +10,23 @@ import (
 	"path/filepath"
 )
 
+// Config описывает конфигурацию CLI-клиента.
+//
+// ServerAddress содержит адрес gRPC-сервера.
+// StatePath содержит путь к локальному файлу состояния клиента.
 type Config struct {
 	ServerAddress string
 	StatePath     string
 }
 
+// Load загружает конфигурацию клиента.
+//
+// Значения берутся из переменных окружения и значений по умолчанию.
+// Если SERVER_ADDRESS не задан, используется localhost:3200.
+//
+// Также функция вычисляет путь к локальному файлу состояния клиента.
 func Load() (*Config, error) {
-	serverAddress := os.Getenv("GOPHKEEPER_SERVER_ADDRESS")
+	serverAddress := os.Getenv("SERVER_ADDRESS")
 	if serverAddress == "" {
 		serverAddress = "localhost:3200"
 	}

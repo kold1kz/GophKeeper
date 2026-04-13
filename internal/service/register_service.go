@@ -13,13 +13,23 @@ type RegisterService interface {
 	Register(ctx context.Context, login, password string) (int, error)
 }
 
+// RegisterService предоставляет бизнес-логику регистрации пользователей.
+//
+// Сервис создает нового пользователя, предварительно проверяя,
+// что пользователь с таким логином еще не существует.
 type registerService struct {
 	users repository.UserRepository
 }
 
+// NewRegisterService создает сервис регистрации пользователя.
 func NewRegisterService(users repository.UserRepository) RegisterService {
 	return &registerService{users: users}
 }
+
+// Register регистрирует нового пользователя.
+//
+// Пароль пользователя хэшируется перед сохранением.
+// Возвращает ErrUserAlreadyExists, если пользователь с таким логином уже существует.
 
 func (s *registerService) Register(ctx context.Context, login, password string) (int, error) {
 	login = strings.TrimSpace(login)

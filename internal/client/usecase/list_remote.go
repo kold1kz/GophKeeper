@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -9,11 +10,13 @@ import (
 	pb "gophkeeper/proto"
 )
 
+// ListRemoteItemsUseCase описывает сценарий вывода удалённых записей с сервера.
 type ListRemoteItemsUseCase struct {
 	store *local.Store
 	grpc  *grpcclient.Client
 }
 
+// NewListRemoteItemsUseCase создаёт новый use case для вывода удалённых записей.
 func NewListRemoteItemsUseCase(store *local.Store, grpc *grpcclient.Client) *ListRemoteItemsUseCase {
 	return &ListRemoteItemsUseCase{
 		store: store,
@@ -21,6 +24,11 @@ func NewListRemoteItemsUseCase(store *local.Store, grpc *grpcclient.Client) *Lis
 	}
 }
 
+// Execute выполняет запрос списка записей на сервер и выводит их в консоль.
+//
+// Для выполнения операции требуется, чтобы пользователь был аутентифицирован.
+// Если сервер не возвращает записей, функция печатает сообщение
+// "no remote items".
 func (u *ListRemoteItemsUseCase) Execute(ctx context.Context) error {
 	state, err := u.store.Load()
 	if err != nil {

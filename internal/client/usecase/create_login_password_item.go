@@ -1,3 +1,4 @@
+// Package usecase содержит прикладные сценарии работы CLI-клиента GophKeeper.
 package usecase
 
 import (
@@ -12,11 +13,14 @@ import (
 	pb "gophkeeper/proto"
 )
 
+// CreateLoginPasswordItemUseCase описывает сценарий создания записи.
 type CreateLoginPasswordItemUseCase struct {
 	store *local.Store
 	grpc  *grpcclient.Client
 }
 
+// NewCreateLoginPasswordItemUseCase создает новый use case
+// для создания записи с логином и паролем.
 func NewCreateLoginPasswordItemUseCase(store *local.Store, grpc *grpcclient.Client) *CreateLoginPasswordItemUseCase {
 	return &CreateLoginPasswordItemUseCase{
 		store: store,
@@ -24,6 +28,12 @@ func NewCreateLoginPasswordItemUseCase(store *local.Store, grpc *grpcclient.Clie
 	}
 }
 
+// Execute создает новую запись с логином и паролем.
+//
+// Полезная нагрузка сериализуется в JSON, шифруется мастер-паролем
+// и отправляется на сервер.
+//
+// Возвращает идентификатор созданной записи или ошибку.
 func (u *CreateLoginPasswordItemUseCase) Execute(
 	ctx context.Context,
 	title, login, password, meta, masterPassword string,
