@@ -7,6 +7,7 @@ import (
 	"gophkeeper/internal/model"
 	pb "gophkeeper/proto"
 
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -101,13 +102,13 @@ func TestCreateItemRequestToModel(t *testing.T) {
 		ClientUpdatedAt:  clientUpdatedAt,
 	}.Build()
 
-	item, err := createItemRequestToModel(10, req)
+	item, err := createItemRequestToModel("10", req)
 	if err != nil {
 		t.Fatalf("createItemRequestToModel returned error: %v", err)
 	}
 
-	if item.UserID != 10 {
-		t.Fatalf("expected userID 10, got %d", item.UserID)
+	if item.UserID != "10" {
+		t.Fatalf("expected userID 10, got %s", item.UserID)
 	}
 	if item.Type != model.ItemTypeText {
 		t.Fatalf("expected type %q, got %q", model.ItemTypeText, item.Type)
@@ -135,7 +136,7 @@ func TestCreateItemRequestToModel(t *testing.T) {
 func TestUpdateItemRequestToModel(t *testing.T) {
 	t.Parallel()
 
-	id := "item-1"
+	id := "7d444840-9dc0-11d1-b245-5ffdce74fad2"
 	title := "title"
 	meta := "meta"
 	payload := []byte("cipher")
@@ -153,13 +154,13 @@ func TestUpdateItemRequestToModel(t *testing.T) {
 		Version:          &version,
 	}.Build()
 
-	item := updateItemRequestToModel(15, req)
+	item := updateItemRequestToModel("15", req)
 
-	if item.ID != id {
+	if item.ID != uuid.MustParse(id) {
 		t.Fatalf("expected id %q, got %q", id, item.ID)
 	}
-	if item.UserID != 15 {
-		t.Fatalf("expected userID 15, got %d", item.UserID)
+	if item.UserID != "15" {
+		t.Fatalf("expected userID 15, got %s", item.UserID)
 	}
 	if item.Version != version {
 		t.Fatalf("expected version %d, got %d", version, item.Version)
@@ -171,7 +172,7 @@ func TestModelItemToProto(t *testing.T) {
 
 	now := time.Now().UTC().Round(0)
 	item := &model.VaultItem{
-		ID:               "item-1",
+		ID:               uuid.MustParse("7d444840-9dc0-11d1-b245-5ffdce74fad2"),
 		Type:             model.ItemTypeText,
 		Title:            "note1",
 		Meta:             "meta1",
@@ -187,7 +188,7 @@ func TestModelItemToProto(t *testing.T) {
 	if got == nil {
 		t.Fatal("expected non-nil proto item")
 	}
-	if got.GetId() != item.ID {
+	if got.GetId() != item.ID.String() {
 		t.Fatalf("expected id %q, got %q", item.ID, got.GetId())
 	}
 	if got.GetTitle() != item.Title {
@@ -202,15 +203,15 @@ func TestModelItemsToProto(t *testing.T) {
 	t.Parallel()
 
 	items := []*model.VaultItem{
-		{ID: "1", Type: model.ItemTypeText, Title: "a"},
-		{ID: "2", Type: model.ItemTypeText, Title: "b"},
+		{ID: uuid.MustParse("7d444840-9dc0-11d1-b245-5ffdce74fad2"), Type: model.ItemTypeText, Title: "a"},
+		{ID: uuid.MustParse("8d444840-9dc0-11d1-b245-5ffdce74fad2"), Type: model.ItemTypeText, Title: "b"},
 	}
 
 	got := modelItemsToProto(items)
 	if len(got) != 2 {
 		t.Fatalf("expected 2 items, got %d", len(got))
 	}
-	if got[0].GetId() != "1" || got[1].GetId() != "2" {
+	if got[0].GetId() != items[0].ID.String() || got[1].GetId() != items[1].ID.String() {
 		t.Fatal("unexpected items order/content")
 	}
 }

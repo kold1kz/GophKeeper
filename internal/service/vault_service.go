@@ -13,11 +13,11 @@ import (
 
 type VaultService interface {
 	CreateItem(ctx context.Context, item *model.VaultItem) (*model.VaultItem, error)
-	GetItem(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error)
-	ListItems(ctx context.Context, userID int64, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error)
+	GetItem(ctx context.Context, userID string, itemID string) (*model.VaultItem, error)
+	ListItems(ctx context.Context, userID string, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error)
 	UpdateItem(ctx context.Context, item *model.VaultItem) (*model.VaultItem, error)
-	DeleteItem(ctx context.Context, userID int64, itemID string) (time.Time, error)
-	SyncItems(ctx context.Context, userID int64, since time.Time, includeDeleted bool) ([]*model.VaultItem, error)
+	DeleteItem(ctx context.Context, userID string, itemID string) (time.Time, error)
+	SyncItems(ctx context.Context, userID string, since time.Time, includeDeleted bool) ([]*model.VaultItem, error)
 }
 
 // VaultService предоставляет бизнес-логику работы с хранилищем пользовательских данных.
@@ -41,7 +41,7 @@ func (s *vaultService) CreateItem(ctx context.Context, item *model.VaultItem) (*
 	if item == nil {
 		return nil, ErrInvalidItemData
 	}
-	if item.UserID == 0 || item.Type == "" || len(item.PayloadEncrypted) == 0 {
+	if item.UserID == "" || item.Type == "" || len(item.PayloadEncrypted) == 0 {
 		return nil, ErrInvalidItemData
 	}
 
@@ -51,7 +51,7 @@ func (s *vaultService) CreateItem(ctx context.Context, item *model.VaultItem) (*
 	}
 
 	now := time.Now()
-	item.ID = uuid.NewString()
+	item.ID = uuid.New()
 	item.Version = 1
 	item.CreatedAt = now
 	item.UpdatedAt = now
@@ -68,8 +68,8 @@ func (s *vaultService) CreateItem(ctx context.Context, item *model.VaultItem) (*
 // Возвращает ErrInvalidItemData, если входные параметры некорректны.
 // Возвращает ErrItemNotFound, если элемент не найден.
 // Возвращает ErrItemDeleted, если элемент был удален.
-func (s *vaultService) GetItem(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error) {
-	if userID == 0 || itemID == "" {
+func (s *vaultService) GetItem(ctx context.Context, userID string, itemID string) (*model.VaultItem, error) {
+	if userID == "" || itemID == "" {
 		return nil, ErrInvalidItemData
 	}
 
@@ -91,8 +91,8 @@ func (s *vaultService) GetItem(ctx context.Context, userID int64, itemID string)
 //
 // Поддерживает фильтрацию удаленных элементов и пагинацию.
 // Возвращает ErrInvalidItemData, если параметры запроса некорректны.
-func (s *vaultService) ListItems(ctx context.Context, userID int64, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
-	if userID == 0 {
+func (s *vaultService) ListItems(ctx context.Context, userID string, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
+	if userID == "" {
 		return nil, ErrInvalidItemData
 	}
 	if limit < 0 || offset < 0 {
@@ -114,7 +114,7 @@ func (s *vaultService) UpdateItem(ctx context.Context, item *model.VaultItem) (*
 	if item == nil {
 		return nil, ErrInvalidItemData
 	}
-	if item.UserID == 0 || item.ID == "" || len(item.PayloadEncrypted) == 0 {
+	if item.UserID == "" || item.ID == uuid.Nil || len(item.PayloadEncrypted) == 0 {
 		return nil, ErrInvalidItemData
 	}
 
@@ -123,7 +123,7 @@ func (s *vaultService) UpdateItem(ctx context.Context, item *model.VaultItem) (*
 		return nil, ErrInvalidItemData
 	}
 
-	current, err := s.repo.GetItemByID(ctx, item.UserID, item.ID)
+	current, err := s.repo.GetItemByID(ctx, item.UserID, item.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -161,8 +161,8 @@ func (s *vaultService) UpdateItem(ctx context.Context, item *model.VaultItem) (*
 // Возвращает время удаления элемента.
 // Возвращает ErrInvalidItemData при некорректных параметрах.
 // Возвращает ErrItemNotFound, если элемент не найден.
-func (s *vaultService) DeleteItem(ctx context.Context, userID int64, itemID string) (time.Time, error) {
-	if userID == 0 || itemID == "" {
+func (s *vaultService) DeleteItem(ctx context.Context, userID string, itemID string) (time.Time, error) {
+	if userID == "" || itemID == "" {
 		return time.Time{}, ErrInvalidItemData
 	}
 
@@ -182,8 +182,8 @@ func (s *vaultService) DeleteItem(ctx context.Context, userID int64, itemID stri
 //
 // Используется для синхронизации данных между несколькими клиентами пользователя.
 // Возвращает ErrInvalidItemData при некорректных параметрах запроса.
-func (s *vaultService) SyncItems(ctx context.Context, userID int64, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
-	if userID == 0 {
+func (s *vaultService) SyncItems(ctx context.Context, userID string, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
+	if userID == "" {
 		return nil, ErrInvalidItemData
 	}
 

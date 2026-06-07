@@ -75,16 +75,16 @@ func Init() *Config {
 // Если соответствующая переменная окружения установлена,
 // её значение переопределяет текущее значение конфигурации.
 func applyEnv(cfg *Config) {
-	if v := os.Getenv("GRPC_SERVER_ADDRESS"); v != "" {
+	if v, ok := os.LookupEnv("GRPC_SERVER_ADDRESS"); ok {
 		cfg.GRPCServerAddress = v
 	}
-	if v := os.Getenv("BASE_URL"); v != "" {
+	if v, ok := os.LookupEnv("BASE_URL"); ok {
 		cfg.BaseURL = v
 	}
-	if v := os.Getenv("DATABASE_DSN"); v != "" {
-		cfg.DatabaseDSN = v
+	if dsn, ok := os.LookupEnv("DATABASE_DSN"); ok {
+		cfg.DatabaseDSN = dsn
 	}
-	if v := os.Getenv("ENABLE_HTTPS"); v != "" {
+	if v, ok := os.LookupEnv("ENABLE_HTTPS"); ok {
 		val, err := strconv.ParseBool(v)
 		if err != nil {
 			log.Printf("Error: %v", err)

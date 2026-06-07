@@ -7,10 +7,7 @@
 //   - работу с пользовательским идентификатором в context.Context.
 package grpcserver
 
-import (
-	"context"
-	"strconv"
-)
+import "context"
 
 type contextKey string
 
@@ -29,21 +26,12 @@ func userIDFromContext(ctx context.Context) (string, bool) {
 	return userID, ok
 }
 
-// userIDInt64FromContext извлекает идентификатор пользователя из контекста
-// и преобразует его в тип int64.
-//
-// Если идентификатор отсутствует, пустой или не является корректным числом,
-// функция возвращает 0 и false.
-func userIDInt64FromContext(ctx context.Context) (int64, bool) {
+// validUserIDFromContext извлекает непустой идентификатор пользователя из контекста.
+func validUserIDFromContext(ctx context.Context) (string, bool) {
 	userID, ok := userIDFromContext(ctx)
 	if !ok || userID == "" {
-		return 0, false
+		return "", false
 	}
 
-	id, err := strconv.ParseInt(userID, 10, 64)
-	if err != nil {
-		return 0, false
-	}
-
-	return id, true
+	return userID, true
 }

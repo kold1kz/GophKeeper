@@ -65,13 +65,13 @@ func TestClose_NotConfigured(t *testing.T) {
 	}
 }
 
-func TestGetDB_NotConfigured(t *testing.T) {
+func TestGetPool_NotConfigured(t *testing.T) {
 	t.Parallel()
 
 	db := &DB{}
 
-	if db.GetDB() != nil {
-		t.Fatal("expected nil sql DB")
+	if db.GetPool() != nil {
+		t.Fatal("expected nil pgx pool")
 	}
 }
 

@@ -9,9 +9,12 @@ import (
 	"gophkeeper/internal/service"
 	pb "gophkeeper/proto"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+const grpcTestItemID = "7d444840-9dc0-11d1-b245-5ffdce74fad2"
 
 func TestServer_GetItem_Success(t *testing.T) {
 	t.Parallel()
@@ -19,9 +22,9 @@ func TestServer_GetItem_Success(t *testing.T) {
 	now := time.Now().UTC().Round(0)
 
 	vaultSvc := &vaultServiceMock{
-		getFn: func(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error) {
+		getFn: func(ctx context.Context, userID string, itemID string) (*model.VaultItem, error) {
 			return &model.VaultItem{
-				ID:               itemID,
+				ID:               uuid.MustParse(itemID),
 				UserID:           userID,
 				Type:             model.ItemTypeText,
 				Title:            "note1",
@@ -39,7 +42,7 @@ func TestServer_GetItem_Success(t *testing.T) {
 
 	ctx := withUserID(context.Background(), "1")
 
-	id := "item-1"
+	id := grpcTestItemID
 	resp, err := srv.GetItem(ctx, pb.GetItemRequest_builder{
 		Id: &id,
 	}.Build())
@@ -49,8 +52,8 @@ func TestServer_GetItem_Success(t *testing.T) {
 	if resp.GetItem() == nil {
 		t.Fatal("expected item")
 	}
-	if resp.GetItem().GetId() != "item-1" {
-		t.Fatalf("expected item-1, got %q", resp.GetItem().GetId())
+	if resp.GetItem().GetId() != grpcTestItemID {
+		t.Fatalf("expected %s, got %q", grpcTestItemID, resp.GetItem().GetId())
 	}
 }
 
@@ -58,7 +61,7 @@ func TestServer_GetItem_NotFound(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		getFn: func(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error) {
+		getFn: func(ctx context.Context, userID string, itemID string) (*model.VaultItem, error) {
 			return nil, service.ErrItemNotFound
 		},
 	}
@@ -86,10 +89,10 @@ func TestServer_ListItems_Success(t *testing.T) {
 	now := time.Now().UTC().Round(0)
 
 	vaultSvc := &vaultServiceMock{
-		listFn: func(ctx context.Context, userID int64, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
+		listFn: func(ctx context.Context, userID string, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
 			return []*model.VaultItem{
 				{
-					ID:               "item-1",
+					ID:               uuid.MustParse(grpcTestItemID),
 					UserID:           userID,
 					Type:             model.ItemTypeText,
 					Title:            "note1",
@@ -130,14 +133,14 @@ func TestServer_DeleteItem_Success(t *testing.T) {
 	now := time.Now().UTC().Round(0)
 
 	vaultSvc := &vaultServiceMock{
-		deleteFn: func(ctx context.Context, userID int64, itemID string) (time.Time, error) {
+		deleteFn: func(ctx context.Context, userID string, itemID string) (time.Time, error) {
 			return now, nil
 		},
 	}
 	srv := NewServer(&registerServiceMock{}, &loginServiceMock{}, vaultSvc)
 
 	ctx := withUserID(context.Background(), "1")
-	id := "item-1"
+	id := grpcTestItemID
 
 	resp, err := srv.DeleteItem(ctx, pb.DeleteItemRequest_builder{
 		Id: &id,
@@ -145,8 +148,8 @@ func TestServer_DeleteItem_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("DeleteItem returned error: %v", err)
 	}
-	if resp.GetId() != "item-1" {
-		t.Fatalf("expected item-1, got %q", resp.GetId())
+	if resp.GetId() != grpcTestItemID {
+		t.Fatalf("expected %s, got %q", grpcTestItemID, resp.GetId())
 	}
 	if resp.GetDeletedAt() == nil {
 		t.Fatal("expected DeletedAt")
@@ -157,7 +160,7 @@ func TestServer_DeleteItem_NotFound(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		deleteFn: func(ctx context.Context, userID int64, itemID string) (time.Time, error) {
+		deleteFn: func(ctx context.Context, userID string, itemID string) (time.Time, error) {
 			return time.Time{}, service.ErrItemNotFound
 		},
 	}
@@ -185,10 +188,10 @@ func TestServer_SyncItems_Success(t *testing.T) {
 	now := time.Now().UTC().Round(0)
 
 	vaultSvc := &vaultServiceMock{
-		syncFn: func(ctx context.Context, userID int64, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
+		syncFn: func(ctx context.Context, userID string, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
 			return []*model.VaultItem{
 				{
-					ID:               "item-1",
+					ID:               uuid.MustParse(grpcTestItemID),
 					UserID:           userID,
 					Type:             model.ItemTypeText,
 					Title:            "note1",
@@ -248,7 +251,7 @@ func TestServer_UpdateItem_Success(t *testing.T) {
 
 	ctx := withUserID(context.Background(), "1")
 
-	id := "item-1"
+	id := grpcTestItemID
 	title := "updated-title"
 	meta := "updated-meta"
 	hash := "hash1"
@@ -270,8 +273,8 @@ func TestServer_UpdateItem_Success(t *testing.T) {
 	if resp.GetItem() == nil {
 		t.Fatal("expected item")
 	}
-	if resp.GetItem().GetId() != "item-1" {
-		t.Fatalf("expected item-1, got %q", resp.GetItem().GetId())
+	if resp.GetItem().GetId() != grpcTestItemID {
+		t.Fatalf("expected %s, got %q", grpcTestItemID, resp.GetItem().GetId())
 	}
 }
 
@@ -287,7 +290,7 @@ func TestServer_UpdateItem_VersionConflict(t *testing.T) {
 
 	ctx := withUserID(context.Background(), "1")
 
-	id := "item-1"
+	id := grpcTestItemID
 	title := "updated-title"
 	version := int64(2)
 

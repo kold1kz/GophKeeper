@@ -2,32 +2,30 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"regexp"
 	"testing"
 
-	sqlmock "github.com/DATA-DOG/go-sqlmock"
+	"github.com/jackc/pgx/v5"
+	"github.com/pashagolub/pgxmock/v4"
 )
 
 func TestPostgresUserRepository_FindByUsername_Success(t *testing.T) {
 	t.Parallel()
 
-	db, mock, err := sqlmock.New()
+	db, err := pgxmock.NewPool()
 	if err != nil {
-		t.Fatalf("sqlmock.New returned error: %v", err)
+		t.Fatalf("pgxmock.NewPool returned error: %v", err)
 	}
 	defer db.Close()
 
 	repo := NewPostgresUserRepository(db)
+	userID := "550e8400-e29b-41d4-a716-446655440000"
 
-	rows := sqlmock.NewRows([]string{
-		"id",
-		"login",
-		"password_hash",
-	}).AddRow(1, "u1", "hash1")
+	rows := pgxmock.NewRows([]string{"id", "login", "password_hash"}).
+		AddRow(userID, "u1", "hash1")
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
+	db.ExpectQuery(regexp.QuoteMeta(`
 		SELECT id, login, password_hash
 		FROM users
 		WHERE login = $1
@@ -42,8 +40,8 @@ func TestPostgresUserRepository_FindByUsername_Success(t *testing.T) {
 	if user == nil {
 		t.Fatal("expected user, got nil")
 	}
-	if user.ID != 1 {
-		t.Fatalf("expected ID 1, got %d", user.ID)
+	if user.ID != userID {
+		t.Fatalf("expected ID %s, got %s", userID, user.ID)
 	}
 	if user.Login != "u1" {
 		t.Fatalf("expected login u1, got %q", user.Login)
@@ -52,29 +50,29 @@ func TestPostgresUserRepository_FindByUsername_Success(t *testing.T) {
 		t.Fatalf("expected password hash1, got %q", user.Password)
 	}
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet sqlmock expectations: %v", err)
+	if err := db.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet pgxmock expectations: %v", err)
 	}
 }
 
 func TestPostgresUserRepository_FindByUsername_NotFound(t *testing.T) {
 	t.Parallel()
 
-	db, mock, err := sqlmock.New()
+	db, err := pgxmock.NewPool()
 	if err != nil {
-		t.Fatalf("sqlmock.New returned error: %v", err)
+		t.Fatalf("pgxmock.NewPool returned error: %v", err)
 	}
 	defer db.Close()
 
 	repo := NewPostgresUserRepository(db)
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
+	db.ExpectQuery(regexp.QuoteMeta(`
 		SELECT id, login, password_hash
 		FROM users
 		WHERE login = $1
 	`)).
 		WithArgs("missing").
-		WillReturnError(sql.ErrNoRows)
+		WillReturnError(pgx.ErrNoRows)
 
 	user, err := repo.FindByUsername(context.Background(), "missing")
 	if err != nil {
@@ -84,23 +82,23 @@ func TestPostgresUserRepository_FindByUsername_NotFound(t *testing.T) {
 		t.Fatalf("expected nil user, got %+v", user)
 	}
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet sqlmock expectations: %v", err)
+	if err := db.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet pgxmock expectations: %v", err)
 	}
 }
 
 func TestPostgresUserRepository_FindByUsername_QueryError(t *testing.T) {
 	t.Parallel()
 
-	db, mock, err := sqlmock.New()
+	db, err := pgxmock.NewPool()
 	if err != nil {
-		t.Fatalf("sqlmock.New returned error: %v", err)
+		t.Fatalf("pgxmock.NewPool returned error: %v", err)
 	}
 	defer db.Close()
 
 	repo := NewPostgresUserRepository(db)
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
+	db.ExpectQuery(regexp.QuoteMeta(`
 		SELECT id, login, password_hash
 		FROM users
 		WHERE login = $1
@@ -116,25 +114,25 @@ func TestPostgresUserRepository_FindByUsername_QueryError(t *testing.T) {
 		t.Fatalf("expected nil user, got %+v", user)
 	}
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet sqlmock expectations: %v", err)
+	if err := db.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet pgxmock expectations: %v", err)
 	}
 }
 
 func TestPostgresUserRepository_Create_Success(t *testing.T) {
 	t.Parallel()
 
-	db, mock, err := sqlmock.New()
+	db, err := pgxmock.NewPool()
 	if err != nil {
-		t.Fatalf("sqlmock.New returned error: %v", err)
+		t.Fatalf("pgxmock.NewPool returned error: %v", err)
 	}
 	defer db.Close()
 
 	repo := NewPostgresUserRepository(db)
+	userID := "550e8400-e29b-41d4-a716-446655440000"
+	rows := pgxmock.NewRows([]string{"id"}).AddRow(userID)
 
-	rows := sqlmock.NewRows([]string{"id"}).AddRow(7)
-
-	mock.ExpectQuery(regexp.QuoteMeta(`
+	db.ExpectQuery(regexp.QuoteMeta(`
 		INSERT INTO users (login, password_hash)
 		VALUES ($1, $2)
 		RETURNING id
@@ -146,27 +144,27 @@ func TestPostgresUserRepository_Create_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create returned error: %v", err)
 	}
-	if id != 7 {
-		t.Fatalf("expected id 7, got %d", id)
+	if id != userID {
+		t.Fatalf("expected id %s, got %s", userID, id)
 	}
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet sqlmock expectations: %v", err)
+	if err := db.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet pgxmock expectations: %v", err)
 	}
 }
 
 func TestPostgresUserRepository_Create_Error(t *testing.T) {
 	t.Parallel()
 
-	db, mock, err := sqlmock.New()
+	db, err := pgxmock.NewPool()
 	if err != nil {
-		t.Fatalf("sqlmock.New returned error: %v", err)
+		t.Fatalf("pgxmock.NewPool returned error: %v", err)
 	}
 	defer db.Close()
 
 	repo := NewPostgresUserRepository(db)
 
-	mock.ExpectQuery(regexp.QuoteMeta(`
+	db.ExpectQuery(regexp.QuoteMeta(`
 		INSERT INTO users (login, password_hash)
 		VALUES ($1, $2)
 		RETURNING id
@@ -178,11 +176,11 @@ func TestPostgresUserRepository_Create_Error(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if id != 0 {
-		t.Fatalf("expected id 0, got %d", id)
+	if id != "" {
+		t.Fatalf("expected empty id, got %s", id)
 	}
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet sqlmock expectations: %v", err)
+	if err := db.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet pgxmock expectations: %v", err)
 	}
 }

@@ -6,7 +6,6 @@ package service
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
 	"gophkeeper/internal/auth"
@@ -53,7 +52,7 @@ func (s *loginService) Login(ctx context.Context, login, password string) (strin
 		return "", ErrInvalidCredentials
 	}
 
-	token, err := auth.NewTokenForUserID(strconv.Itoa(user.ID))
+	token, err := auth.NewTokenForUserID(user.ID)
 	if err != nil {
 		return "", err
 	}

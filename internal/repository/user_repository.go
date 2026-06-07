@@ -9,11 +9,11 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -22,7 +22,7 @@ import (
 var ErrUserAlreadyExists = errors.New("user already exists")
 
 type User struct {
-	ID       int
+	ID       string
 	Login    string
 	Password string
 }
@@ -32,18 +32,18 @@ type User struct {
 // Используется сервисным слоем для абстракции от конкретной реализации БД.
 type UserRepository interface {
 	FindByUsername(ctx context.Context, login string) (*User, error)
-	Create(ctx context.Context, login, passwordHash string) (int, error)
+	Create(ctx context.Context, login, passwordHash string) (string, error)
 }
 
 // PostgresUserRepository реализует работу с пользователями в PostgreSQL.
 //
 // Предоставляет методы для поиска пользователя и создания нового.
 type PostgresUserRepository struct {
-	db *sql.DB
+	db PgxDB
 }
 
 // NewPostgresUserRepository создает новый репозиторий пользователей.
-func NewPostgresUserRepository(db *sql.DB) *PostgresUserRepository {
+func NewPostgresUserRepository(db PgxDB) *PostgresUserRepository {
 	return &PostgresUserRepository{db: db}
 }
 
@@ -61,13 +61,13 @@ func (r *PostgresUserRepository) FindByUsername(ctx context.Context, login strin
 	`
 
 	var user User
-	err := r.db.QueryRowContext(ctx, query, login).Scan(
+	err := r.db.QueryRow(ctx, query, login).Scan(
 		&user.ID,
 		&user.Login,
 		&user.Password,
 	)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("query user by login: %w", err)
@@ -82,21 +82,21 @@ func (r *PostgresUserRepository) FindByUsername(ctx context.Context, login strin
 // - созданного пользователя при успехе
 // - ErrUserAlreadyExists, если пользователь уже существует
 // - ошибку при сбое записи в базу данных
-func (r *PostgresUserRepository) Create(ctx context.Context, login, passwordHash string) (int, error) {
+func (r *PostgresUserRepository) Create(ctx context.Context, login, passwordHash string) (string, error) {
 	const query = `
 		INSERT INTO users (login, password_hash)
 		VALUES ($1, $2)
 		RETURNING id
 	`
 
-	var id int
-	err := r.db.QueryRowContext(ctx, query, login, passwordHash).Scan(&id)
+	var id string
+	err := r.db.QueryRow(ctx, query, login, passwordHash).Scan(&id)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == pgerrcode.UniqueViolation {
-			return 0, ErrUserAlreadyExists
+			return "", ErrUserAlreadyExists
 		}
-		return 0, fmt.Errorf("insert user: %w", err)
+		return "", fmt.Errorf("insert user: %w", err)
 	}
 
 	return id, nil

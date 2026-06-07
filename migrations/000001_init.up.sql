@@ -4,10 +4,20 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =========================
+-- TYPES
+-- =========================
+CREATE TYPE vault_item_type AS ENUM (
+    'login_password',
+    'text',
+    'binary',
+    'bank_card'
+);
+
+-- =========================
 -- USERS
 -- =========================
 CREATE TABLE IF NOT EXISTS users (
-                                     id              BIGSERIAL PRIMARY KEY,
+                                     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                      login           TEXT NOT NULL UNIQUE,
                                      password_hash   TEXT NOT NULL,
                                      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -21,7 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_users_login ON users(login);
 -- =========================
 CREATE TABLE IF NOT EXISTS user_sessions (
                                              id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                             user_id              BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                                             user_id              UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                                              refresh_token_hash   TEXT NOT NULL UNIQUE,
                                              device_id            TEXT,
                                              device_name          TEXT,
@@ -44,11 +54,9 @@ CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at
 -- =========================
 CREATE TABLE IF NOT EXISTS vault_items (
                            id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                           user_id              BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                           user_id              UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 
-                           type                 TEXT NOT NULL CHECK (
-                               type IN ('login_password', 'text', 'binary', 'bank_card')
-                               ),
+                           type                 vault_item_type NOT NULL,
 
                            title                TEXT NOT NULL,
                            meta                 TEXT,

@@ -32,8 +32,8 @@ import (
 // - InvalidArgument — некорректный тип или данные
 // - Internal — внутренняя ошибка сервера
 func (s *Server) CreateItem(ctx context.Context, req *pb.CreateItemRequest) (*pb.CreateItemResponse, error) {
-	userID, ok := userIDInt64FromContext(ctx)
-	if !ok || userID == 0 {
+	userID, ok := validUserIDFromContext(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "missing user in context")
 	}
 
@@ -69,8 +69,8 @@ func (s *Server) CreateItem(ctx context.Context, req *pb.CreateItemRequest) (*pb
 // - FailedPrecondition — элемент удален
 // - Internal — внутренняя ошибка
 func (s *Server) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.GetItemResponse, error) {
-	userID, ok := userIDInt64FromContext(ctx)
-	if !ok || userID == 0 {
+	userID, ok := validUserIDFromContext(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "missing user in context")
 	}
 
@@ -102,8 +102,8 @@ func (s *Server) GetItem(ctx context.Context, req *pb.GetItemRequest) (*pb.GetIt
 // - InvalidArgument — некорректные параметры
 // - Internal — ошибка получения данных
 func (s *Server) ListItems(ctx context.Context, req *pb.ListItemsRequest) (*pb.ListItemsResponse, error) {
-	userID, ok := userIDInt64FromContext(ctx)
-	if !ok || userID == 0 {
+	userID, ok := validUserIDFromContext(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "missing user in context")
 	}
 
@@ -140,8 +140,8 @@ func (s *Server) ListItems(ctx context.Context, req *pb.ListItemsRequest) (*pb.L
 // - Aborted — конфликт версий
 // - Internal — ошибка обновления
 func (s *Server) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) (*pb.UpdateItemResponse, error) {
-	userID, ok := userIDInt64FromContext(ctx)
-	if !ok || userID == 0 {
+	userID, ok := validUserIDFromContext(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "missing user in context")
 	}
 
@@ -178,8 +178,8 @@ func (s *Server) UpdateItem(ctx context.Context, req *pb.UpdateItemRequest) (*pb
 // - NotFound — элемент не найден
 // - Internal — ошибка удаления
 func (s *Server) DeleteItem(ctx context.Context, req *pb.DeleteItemRequest) (*pb.DeleteItemResponse, error) {
-	userID, ok := userIDInt64FromContext(ctx)
-	if !ok || userID == 0 {
+	userID, ok := validUserIDFromContext(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "missing user in context")
 	}
 
@@ -211,8 +211,8 @@ func (s *Server) DeleteItem(ctx context.Context, req *pb.DeleteItemRequest) (*pb
 // - InvalidArgument — некорректные параметры
 // - Internal — ошибка синхронизации
 func (s *Server) SyncItems(ctx context.Context, req *pb.SyncItemsRequest) (*pb.SyncItemsResponse, error) {
-	userID, ok := userIDInt64FromContext(ctx)
-	if !ok || userID == 0 {
+	userID, ok := validUserIDFromContext(ctx)
+	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "missing user in context")
 	}
 

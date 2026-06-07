@@ -22,11 +22,11 @@ type Config struct {
 // Load загружает конфигурацию клиента.
 //
 // Значения берутся из переменных окружения и значений по умолчанию.
-// Если SERVER_ADDRESS не задан, используется localhost:3200.
+// Если GOPHKEEPER_SERVER_ADDRESS не задан, используется localhost:3200.
 //
 // Также функция вычисляет путь к локальному файлу состояния клиента.
 func Load() (*Config, error) {
-	serverAddress := os.Getenv("SERVER_ADDRESS")
+	serverAddress := os.Getenv("GOPHKEEPER_SERVER_ADDRESS")
 	if serverAddress == "" {
 		serverAddress = "localhost:3200"
 	}

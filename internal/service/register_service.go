@@ -10,7 +10,7 @@ import (
 )
 
 type RegisterService interface {
-	Register(ctx context.Context, login, password string) (int, error)
+	Register(ctx context.Context, login, password string) (string, error)
 }
 
 // RegisterService предоставляет бизнес-логику регистрации пользователей.
@@ -31,23 +31,23 @@ func NewRegisterService(users repository.UserRepository) RegisterService {
 // Пароль пользователя хэшируется перед сохранением.
 // Возвращает ErrUserAlreadyExists, если пользователь с таким логином уже существует.
 
-func (s *registerService) Register(ctx context.Context, login, password string) (int, error) {
+func (s *registerService) Register(ctx context.Context, login, password string) (string, error) {
 	login = strings.TrimSpace(login)
 	if login == "" || password == "" {
-		return 0, ErrInvalidRegisterData
+		return "", ErrInvalidRegisterData
 	}
 
 	passwordHash, err := auth.HashPassword(password)
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
 	id, err := s.users.Create(ctx, login, passwordHash)
 	if err != nil {
 		if errors.Is(err, repository.ErrUserAlreadyExists) {
-			return 0, repository.ErrUserAlreadyExists
+			return "", repository.ErrUserAlreadyExists
 		}
-		return 0, err
+		return "", err
 	}
 
 	return id, nil

@@ -18,6 +18,13 @@ import (
 	"strings"
 )
 
+var (
+	errEmptyUserID    = errors.New("empty user id")
+	errEmptyToken     = errors.New("empty token")
+	errBadTokenFormat = errors.New("bad token format")
+	errInvalidSign    = errors.New("invalid signature")
+)
+
 // getEnvOrDefault возвращает значение переменной окружения.
 //
 // Если переменная не задана, возвращается значение по умолчанию.
@@ -47,7 +54,7 @@ func secretKey() string {
 // Возвращает ошибку, если userID пустой.
 func signUserID(userID string) (string, error) {
 	if userID == "" {
-		return "", errors.New("empty user id")
+		return "", errEmptyUserID
 	}
 
 	mac := hmac.New(sha256.New, []byte(secretKey()))
@@ -73,17 +80,17 @@ func signUserID(userID string) (string, error) {
 //   - неверная подпись.
 func parseToken(token string) (string, error) {
 	if token == "" {
-		return "", errors.New("empty token")
+		return "", errEmptyToken
 	}
 
 	parts := strings.Split(token, ":")
 	if len(parts) != 2 {
-		return "", errors.New("bad token format")
+		return "", errBadTokenFormat
 	}
 
 	userID := parts[0]
 	if userID == "" {
-		return "", errors.New("empty user id")
+		return "", errEmptyUserID
 	}
 
 	sigBytes, err := hex.DecodeString(parts[1])
@@ -96,7 +103,7 @@ func parseToken(token string) (string, error) {
 	expected := mac.Sum(nil)
 
 	if !hmac.Equal(sigBytes, expected) {
-		return "", errors.New("invalid signature")
+		return "", errInvalidSign
 	}
 
 	return userID, nil

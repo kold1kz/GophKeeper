@@ -4,7 +4,6 @@ package grpcserver
 import (
 	"context"
 	"errors"
-	"strconv"
 
 	"gophkeeper/internal/repository"
 	"gophkeeper/internal/service"
@@ -63,7 +62,7 @@ func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.Reg
 	}
 
 	return pb.RegisterResponse_builder{
-		UserId: proto.String(strconv.Itoa(userID)),
+		UserId: proto.String(userID),
 	}.Build(), nil
 }
 

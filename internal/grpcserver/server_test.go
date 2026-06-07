@@ -10,15 +10,16 @@ import (
 	"gophkeeper/internal/service"
 	pb "gophkeeper/proto"
 
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type registerServiceMock struct {
-	registerFn func(ctx context.Context, login, password string) (int, error)
+	registerFn func(ctx context.Context, login, password string) (string, error)
 }
 
-func (m *registerServiceMock) Register(ctx context.Context, login, password string) (int, error) {
+func (m *registerServiceMock) Register(ctx context.Context, login, password string) (string, error) {
 	return m.registerFn(ctx, login, password)
 }
 
@@ -32,29 +33,29 @@ func (m *loginServiceMock) Login(ctx context.Context, login, password string) (s
 
 type vaultServiceMock struct {
 	createFn func(ctx context.Context, item *model.VaultItem) (*model.VaultItem, error)
-	getFn    func(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error)
-	listFn   func(ctx context.Context, userID int64, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error)
+	getFn    func(ctx context.Context, userID string, itemID string) (*model.VaultItem, error)
+	listFn   func(ctx context.Context, userID string, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error)
 	updateFn func(ctx context.Context, item *model.VaultItem) (*model.VaultItem, error)
-	deleteFn func(ctx context.Context, userID int64, itemID string) (time.Time, error)
-	syncFn   func(ctx context.Context, userID int64, since time.Time, includeDeleted bool) ([]*model.VaultItem, error)
+	deleteFn func(ctx context.Context, userID string, itemID string) (time.Time, error)
+	syncFn   func(ctx context.Context, userID string, since time.Time, includeDeleted bool) ([]*model.VaultItem, error)
 }
 
 func (m *vaultServiceMock) CreateItem(ctx context.Context, item *model.VaultItem) (*model.VaultItem, error) {
 	return m.createFn(ctx, item)
 }
-func (m *vaultServiceMock) GetItem(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error) {
+func (m *vaultServiceMock) GetItem(ctx context.Context, userID string, itemID string) (*model.VaultItem, error) {
 	return m.getFn(ctx, userID, itemID)
 }
-func (m *vaultServiceMock) ListItems(ctx context.Context, userID int64, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
+func (m *vaultServiceMock) ListItems(ctx context.Context, userID string, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
 	return m.listFn(ctx, userID, includeDeleted, limit, offset)
 }
 func (m *vaultServiceMock) UpdateItem(ctx context.Context, item *model.VaultItem) (*model.VaultItem, error) {
 	return m.updateFn(ctx, item)
 }
-func (m *vaultServiceMock) DeleteItem(ctx context.Context, userID int64, itemID string) (time.Time, error) {
+func (m *vaultServiceMock) DeleteItem(ctx context.Context, userID string, itemID string) (time.Time, error) {
 	return m.deleteFn(ctx, userID, itemID)
 }
-func (m *vaultServiceMock) SyncItems(ctx context.Context, userID int64, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
+func (m *vaultServiceMock) SyncItems(ctx context.Context, userID string, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
 	return m.syncFn(ctx, userID, since, includeDeleted)
 }
 
@@ -62,8 +63,8 @@ func TestServer_Register_Success(t *testing.T) {
 	t.Parallel()
 
 	registerSvc := &registerServiceMock{
-		registerFn: func(ctx context.Context, login, password string) (int, error) {
-			return 42, nil
+		registerFn: func(ctx context.Context, login, password string) (string, error) {
+			return "550e8400-e29b-41d4-a716-446655440000", nil
 		},
 	}
 	loginSvc := &loginServiceMock{}
@@ -81,8 +82,8 @@ func TestServer_Register_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register returned error: %v", err)
 	}
-	if resp.GetUserId() != "42" {
-		t.Fatalf("expected user id 42, got %q", resp.GetUserId())
+	if resp.GetUserId() != "550e8400-e29b-41d4-a716-446655440000" {
+		t.Fatalf("unexpected user id: %q", resp.GetUserId())
 	}
 }
 
@@ -90,8 +91,8 @@ func TestServer_Register_AlreadyExists(t *testing.T) {
 	t.Parallel()
 
 	registerSvc := &registerServiceMock{
-		registerFn: func(ctx context.Context, login, password string) (int, error) {
-			return 0, repository.ErrUserAlreadyExists
+		registerFn: func(ctx context.Context, login, password string) (string, error) {
+			return "", repository.ErrUserAlreadyExists
 		},
 	}
 	srv := NewServer(registerSvc, &loginServiceMock{}, &vaultServiceMock{})
@@ -179,7 +180,7 @@ func TestServer_CreateItem_Success(t *testing.T) {
 
 	vaultSvc := &vaultServiceMock{
 		createFn: func(ctx context.Context, item *model.VaultItem) (*model.VaultItem, error) {
-			item.ID = "item-1"
+			item.ID = uuid.MustParse("7d444840-9dc0-11d1-b245-5ffdce74fad2")
 			return item, nil
 		},
 	}
@@ -203,7 +204,7 @@ func TestServer_CreateItem_Success(t *testing.T) {
 	if resp.GetItem() == nil {
 		t.Fatal("expected item in response")
 	}
-	if resp.GetItem().GetId() != "item-1" {
-		t.Fatalf("expected item id item-1, got %q", resp.GetItem().GetId())
+	if resp.GetItem().GetId() != "7d444840-9dc0-11d1-b245-5ffdce74fad2" {
+		t.Fatalf("unexpected item id: %q", resp.GetItem().GetId())
 	}
 }

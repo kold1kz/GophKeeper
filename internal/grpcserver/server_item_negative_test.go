@@ -163,7 +163,7 @@ func TestServer_GetItem_InvalidItemID(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		getFn: func(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error) {
+		getFn: func(ctx context.Context, userID string, itemID string) (*model.VaultItem, error) {
 			return nil, service.ErrInvalidItemData
 		},
 	}
@@ -189,7 +189,7 @@ func TestServer_GetItem_Deleted(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		getFn: func(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error) {
+		getFn: func(ctx context.Context, userID string, itemID string) (*model.VaultItem, error) {
 			return nil, service.ErrItemDeleted
 		},
 	}
@@ -215,7 +215,7 @@ func TestServer_GetItem_InternalError(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		getFn: func(ctx context.Context, userID int64, itemID string) (*model.VaultItem, error) {
+		getFn: func(ctx context.Context, userID string, itemID string) (*model.VaultItem, error) {
 			return nil, errors.New("boom")
 		},
 	}
@@ -257,7 +257,7 @@ func TestServer_ListItems_InvalidParams(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		listFn: func(ctx context.Context, userID int64, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
+		listFn: func(ctx context.Context, userID string, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
 			return nil, service.ErrInvalidItemData
 		},
 	}
@@ -287,7 +287,7 @@ func TestServer_ListItems_InternalError(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		listFn: func(ctx context.Context, userID int64, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
+		listFn: func(ctx context.Context, userID string, includeDeleted bool, limit, offset int) ([]*model.VaultItem, error) {
 			return nil, errors.New("boom")
 		},
 	}
@@ -480,7 +480,7 @@ func TestServer_DeleteItem_InvalidID(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		deleteFn: func(ctx context.Context, userID int64, itemID string) (time.Time, error) {
+		deleteFn: func(ctx context.Context, userID string, itemID string) (time.Time, error) {
 			return time.Time{}, service.ErrInvalidItemData
 		},
 	}
@@ -506,7 +506,7 @@ func TestServer_DeleteItem_InternalError(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		deleteFn: func(ctx context.Context, userID int64, itemID string) (time.Time, error) {
+		deleteFn: func(ctx context.Context, userID string, itemID string) (time.Time, error) {
 			return time.Time{}, errors.New("boom")
 		},
 	}
@@ -548,7 +548,7 @@ func TestServer_SyncItems_InvalidParams(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		syncFn: func(ctx context.Context, userID int64, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
+		syncFn: func(ctx context.Context, userID string, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
 			return nil, service.ErrInvalidItemData
 		},
 	}
@@ -576,7 +576,7 @@ func TestServer_SyncItems_InternalError(t *testing.T) {
 	t.Parallel()
 
 	vaultSvc := &vaultServiceMock{
-		syncFn: func(ctx context.Context, userID int64, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
+		syncFn: func(ctx context.Context, userID string, since time.Time, includeDeleted bool) ([]*model.VaultItem, error) {
 			return nil, errors.New("boom")
 		},
 	}

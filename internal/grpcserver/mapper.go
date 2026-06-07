@@ -8,6 +8,7 @@ import (
 	"gophkeeper/internal/model"
 	pb "gophkeeper/proto"
 
+	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -51,7 +52,7 @@ func modelItemTypeToProto(t model.ItemType) pb.ItemType {
 // в доменную модель VaultItem.
 //
 // В запись подставляется идентификатор текущего пользователя.
-func createItemRequestToModel(userID int64, req *pb.CreateItemRequest) (*model.VaultItem, error) {
+func createItemRequestToModel(userID string, req *pb.CreateItemRequest) (*model.VaultItem, error) {
 	itemType, err := protoItemTypeToModel(req.GetType())
 	if err != nil {
 		return nil, err
@@ -79,15 +80,17 @@ func createItemRequestToModel(userID int64, req *pb.CreateItemRequest) (*model.V
 // в доменную модель VaultItem.
 //
 // В запись подставляется идентификатор текущего пользователя.
-func updateItemRequestToModel(userID int64, req *pb.UpdateItemRequest) *model.VaultItem {
+func updateItemRequestToModel(userID string, req *pb.UpdateItemRequest) *model.VaultItem {
 	var clientUpdatedAt *time.Time
 	if ts := req.GetClientUpdatedAt(); ts != nil {
 		t := ts.AsTime()
 		clientUpdatedAt = &t
 	}
 
+	id, _ := uuid.Parse(req.GetId())
+
 	return &model.VaultItem{
-		ID:               req.GetId(),
+		ID:               id,
 		UserID:           userID,
 		Title:            req.GetTitle(),
 		Meta:             req.GetMeta(),
@@ -116,8 +119,9 @@ func modelItemToProto(item *model.VaultItem) *pb.VaultItem {
 		deletedAt = timestamppb.New(*item.DeletedAt)
 	}
 
+	id := item.ID.String()
 	return pb.VaultItem_builder{
-		Id:               &item.ID,
+		Id:               &id,
 		Type:             modelItemTypeToProto(item.Type).Enum(),
 		Title:            &item.Title,
 		Meta:             &item.Meta,

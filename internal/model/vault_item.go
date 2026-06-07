@@ -4,7 +4,11 @@
 // используемые сервером, репозиториями и сервисами.
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // ItemType описывает тип хранимой записи.
 type ItemType string
@@ -26,9 +30,9 @@ const (
 // а также временные метки создания, обновления и удаления.
 type VaultItem struct {
 	// ID — уникальный идентификатор записи.
-	ID string
+	ID uuid.UUID
 	// UserID — идентификатор владельца записи.
-	UserID int64
+	UserID string
 	// Type — тип записи.
 	Type ItemType
 	// Title — заголовок записи.

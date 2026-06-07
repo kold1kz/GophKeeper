@@ -109,8 +109,8 @@ func run() error {
 		return fmt.Errorf("grpc login requires database connection")
 	}
 
-	userRepo := repository.NewPostgresUserRepository(cfg.DB.GetDB())
-	vaultRepo := repository.NewPostgresVaultRepository(cfg.DB.GetDB())
+	userRepo := repository.NewPostgresUserRepository(cfg.DB.GetPool())
+	vaultRepo := repository.NewPostgresVaultRepository(cfg.DB.GetPool())
 
 	registerSvc := service.NewRegisterService(userRepo)
 	loginSvc := service.NewLoginService(userRepo)

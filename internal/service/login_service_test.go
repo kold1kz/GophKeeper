@@ -11,14 +11,14 @@ import (
 
 type userRepoMock struct {
 	findByUsernameFn func(ctx context.Context, login string) (*repository.User, error)
-	createFn         func(ctx context.Context, login, passwordHash string) (int, error)
+	createFn         func(ctx context.Context, login, passwordHash string) (string, error)
 }
 
 func (m *userRepoMock) FindByUsername(ctx context.Context, login string) (*repository.User, error) {
 	return m.findByUsernameFn(ctx, login)
 }
 
-func (m *userRepoMock) Create(ctx context.Context, login, passwordHash string) (int, error) {
+func (m *userRepoMock) Create(ctx context.Context, login, passwordHash string) (string, error) {
 	return m.createFn(ctx, login, passwordHash)
 }
 
@@ -33,13 +33,13 @@ func TestLoginService_Login_Success(t *testing.T) {
 	repo := &userRepoMock{
 		findByUsernameFn: func(ctx context.Context, login string) (*repository.User, error) {
 			return &repository.User{
-				ID:       1,
+				ID:       "550e8400-e29b-41d4-a716-446655440000",
 				Login:    "u1",
 				Password: hash,
 			}, nil
 		},
-		createFn: func(ctx context.Context, login, passwordHash string) (int, error) {
-			return 0, nil
+		createFn: func(ctx context.Context, login, passwordHash string) (string, error) {
+			return "", nil
 		},
 	}
 
@@ -61,8 +61,8 @@ func TestLoginService_Login_InvalidCredentials(t *testing.T) {
 		findByUsernameFn: func(ctx context.Context, login string) (*repository.User, error) {
 			return nil, nil
 		},
-		createFn: func(ctx context.Context, login, passwordHash string) (int, error) {
-			return 0, nil
+		createFn: func(ctx context.Context, login, passwordHash string) (string, error) {
+			return "", nil
 		},
 	}
 

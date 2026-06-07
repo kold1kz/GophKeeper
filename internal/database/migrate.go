@@ -15,10 +15,16 @@ import (
 // и применяет все ещё не выполненные миграции к базе PostgreSQL.
 //
 // Если миграций для применения нет, ошибка ErrNoChange не считается ошибкой выполнения.
-func AutoMigrate(db *sql.DB) error {
-	if db == nil {
-		return fmt.Errorf("database is nil")
+func AutoMigrate(dsn string) error {
+	if dsn == "" {
+		return fmt.Errorf("database dsn is empty")
 	}
+
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return fmt.Errorf("open migration database: %w", err)
+	}
+	defer db.Close()
 
 	driver, err := postgresmigrate.WithInstance(db, &postgresmigrate.Config{})
 	if err != nil {
@@ -33,9 +39,7 @@ func AutoMigrate(db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("create migrate instance: %w", err)
 	}
-	defer func() {
-		_, _ = m.Close()
-	}()
+	defer m.Close()
 
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return fmt.Errorf("apply migrations: %w", err)

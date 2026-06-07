@@ -30,6 +30,23 @@ var (
 	buildCommit string
 )
 
+const (
+	cmdVersion     = "version"
+	cmdRegister    = "register"
+	cmdLogin       = "login"
+	cmdSync        = "sync"
+	cmdCreateText  = "create-text"
+	cmdListLocal   = "list-local"
+	cmdGetLocal    = "get-local"
+	cmdListRemote  = "list-remote"
+	cmdDeleteItem  = "delete-item"
+	cmdUpdateText  = "update-text"
+	cmdCreateLogin = "create-login"
+	cmdCreateCard  = "create-card"
+	cmdCreateFile  = "create-file"
+	cmdGetFile     = "get-file"
+)
+
 // na возвращает строку "N/A", если значение пустое.
 //
 // Используется для вывода метаданных сборки.
@@ -67,7 +84,7 @@ func run() error {
 		return nil
 	}
 
-	if os.Args[1] == "version" {
+	if os.Args[1] == cmdVersion {
 		fmt.Printf("Build version: %s\n", na(buildVersion))
 		fmt.Printf("Build date: %s\n", na(buildDate))
 		fmt.Printf("Build commit: %s\n", na(buildCommit))
@@ -84,7 +101,7 @@ func run() error {
 	ctx := context.Background()
 
 	switch os.Args[1] {
-	case "register":
+	case cmdRegister:
 		if len(os.Args) != 4 {
 			return fmt.Errorf("usage: gophkeeper-cli register <login> <password>")
 		}
@@ -98,7 +115,7 @@ func run() error {
 		fmt.Println("registered, user_id:", userID)
 		return nil
 
-	case "login":
+	case cmdLogin:
 		if len(os.Args) != 4 {
 			return fmt.Errorf("usage: gophkeeper-cli login <login> <password>")
 		}
@@ -111,7 +128,7 @@ func run() error {
 		fmt.Println("login successful")
 		return nil
 
-	case "sync":
+	case cmdSync:
 		uc := usecase.NewSyncUseCase(store, grpcCli)
 		if err := uc.Execute(ctx); err != nil {
 			return err
@@ -120,7 +137,7 @@ func run() error {
 		fmt.Println("sync successful")
 		return nil
 
-	case "create-text":
+	case cmdCreateText:
 		if len(os.Args) < 5 || len(os.Args) > 6 {
 			return fmt.Errorf("usage: gophkeeper-cli create-text <title> <text> <master-password> [meta]")
 		}
@@ -139,14 +156,14 @@ func run() error {
 		fmt.Println("text item created, id:", itemID)
 		return nil
 
-	case "list-local":
+	case cmdListLocal:
 		uc := usecase.NewListLocalItemsUseCase(store)
 		if err := uc.Execute(); err != nil {
 			return err
 		}
 		return nil
 
-	case "get-local":
+	case cmdGetLocal:
 		if len(os.Args) != 4 {
 			return fmt.Errorf("usage: gophkeeper-cli get-local <id> <master-password>")
 		}
@@ -158,14 +175,14 @@ func run() error {
 
 		return nil
 
-	case "list-remote":
+	case cmdListRemote:
 		uc := usecase.NewListRemoteItemsUseCase(store, grpcCli)
 		if err := uc.Execute(ctx); err != nil {
 			return err
 		}
 		return nil
 
-	case "delete-item":
+	case cmdDeleteItem:
 		if len(os.Args) != 3 {
 			return fmt.Errorf("usage: gophkeeper-cli delete-item <id>")
 		}
@@ -177,7 +194,7 @@ func run() error {
 
 		return nil
 
-	case "update-text":
+	case cmdUpdateText:
 		if len(os.Args) < 6 || len(os.Args) > 7 {
 			return fmt.Errorf("usage: gophkeeper-cli update-text <id> <title> <text> <master-password> [meta]")
 		}
@@ -194,7 +211,7 @@ func run() error {
 
 		return nil
 
-	case "create-login":
+	case cmdCreateLogin:
 		if len(os.Args) < 6 || len(os.Args) > 7 {
 			return fmt.Errorf("usage: gophkeeper-cli create-login <title> <login> <password> <master-password> [meta]")
 		}
@@ -220,7 +237,7 @@ func run() error {
 		fmt.Println("login/password item created, id:", itemID)
 		return nil
 
-	case "create-card":
+	case cmdCreateCard:
 		if len(os.Args) < 8 || len(os.Args) > 9 {
 			return fmt.Errorf("usage: gophkeeper-cli create-card <title> <number> <holder> <expiry> <cvv> <master-password> [meta]")
 		}
@@ -249,7 +266,7 @@ func run() error {
 		fmt.Println("bank card created, id:", id)
 		return nil
 
-	case "create-file":
+	case cmdCreateFile:
 		if len(os.Args) < 5 || len(os.Args) > 6 {
 			return fmt.Errorf("usage: gophkeeper-cli create-file <title> <file-path> <master-password> [meta]")
 		}
@@ -268,7 +285,7 @@ func run() error {
 		fmt.Println("binary item created, id:", itemID)
 		return nil
 
-	case "get-file":
+	case cmdGetFile:
 		if len(os.Args) != 5 {
 			return fmt.Errorf("usage: gophkeeper-cli get-file <id> <master-password> <output-dir>")
 		}

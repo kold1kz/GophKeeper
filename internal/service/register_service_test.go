@@ -15,14 +15,14 @@ func TestRegisterService_Register_Success(t *testing.T) {
 		findByUsernameFn: func(ctx context.Context, login string) (*repository.User, error) {
 			return nil, nil
 		},
-		createFn: func(ctx context.Context, login, passwordHash string) (int, error) {
+		createFn: func(ctx context.Context, login, passwordHash string) (string, error) {
 			if login != "u1" {
 				t.Fatalf("unexpected login: %s", login)
 			}
 			if passwordHash == "" {
 				t.Fatal("expected password hash")
 			}
-			return 1, nil
+			return "550e8400-e29b-41d4-a716-446655440000", nil
 		},
 	}
 
@@ -32,8 +32,8 @@ func TestRegisterService_Register_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Register returned error: %v", err)
 	}
-	if id != 1 {
-		t.Fatalf("expected id 1, got %d", id)
+	if id != "550e8400-e29b-41d4-a716-446655440000" {
+		t.Fatalf("unexpected id: %s", id)
 	}
 }
 
@@ -44,8 +44,8 @@ func TestRegisterService_Register_UserAlreadyExists(t *testing.T) {
 		findByUsernameFn: func(ctx context.Context, login string) (*repository.User, error) {
 			return nil, nil
 		},
-		createFn: func(ctx context.Context, login, passwordHash string) (int, error) {
-			return 0, repository.ErrUserAlreadyExists
+		createFn: func(ctx context.Context, login, passwordHash string) (string, error) {
+			return "", repository.ErrUserAlreadyExists
 		},
 	}
 

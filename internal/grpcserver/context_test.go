@@ -19,27 +19,27 @@ func TestWithUserID_AndUserIDFromContext(t *testing.T) {
 	}
 }
 
-func TestUserIDInt64FromContext_Success(t *testing.T) {
+func TestValidUserIDFromContext_Success(t *testing.T) {
 	t.Parallel()
 
-	ctx := withUserID(context.Background(), "123")
+	ctx := withUserID(context.Background(), "550e8400-e29b-41d4-a716-446655440000")
 
-	id, ok := userIDInt64FromContext(ctx)
+	id, ok := validUserIDFromContext(ctx)
 	if !ok {
-		t.Fatal("expected int64 user id")
+		t.Fatal("expected user id")
 	}
-	if id != 123 {
-		t.Fatalf("expected 123, got %d", id)
+	if id != "550e8400-e29b-41d4-a716-446655440000" {
+		t.Fatalf("unexpected user id: %s", id)
 	}
 }
 
-func TestUserIDInt64FromContext_Invalid(t *testing.T) {
+func TestValidUserIDFromContext_Empty(t *testing.T) {
 	t.Parallel()
 
-	ctx := withUserID(context.Background(), "abc")
+	ctx := withUserID(context.Background(), "")
 
-	_, ok := userIDInt64FromContext(ctx)
+	_, ok := validUserIDFromContext(ctx)
 	if ok {
-		t.Fatal("expected conversion failure")
+		t.Fatal("expected empty user id failure")
 	}
 }
